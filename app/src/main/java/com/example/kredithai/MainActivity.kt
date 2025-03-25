@@ -1,45 +1,39 @@
 package com.example.kredithai
 
+import CustomTopAppBar
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.History
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Payments
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.sharp.Home
-import androidx.compose.material3.BottomAppBar
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.navigation.compose.rememberNavController
-import androidx.navigation.createGraph
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.ui.graphics.vector.ImageVector
+import com.example.kredithai.navigation.AppNavHost
+import com.example.kredithai.navigation.Routes
+import com.example.kredithai.presentations.components.AppBottomBar
 import com.example.kredithai.ui.theme.KredithaiTheme
-import kotlinx.serialization.Serializable
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+//        val splashScreen = installSplashScreen()
+//        splashScreen.setKeepOnScreenCondition {true}
+//
+//        CoroutineScope(Dispatchers.Main).launch {
+//        delay(3000L)
+//          splashScreen.setKeepOnScreenCondition {false}
+//        }
+
         setContent {
             KredithaiTheme {
                 AppRoot()
@@ -48,116 +42,33 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-
-data class NavigationItem(
-    val title: String, val icon: ImageVector, val route: String
-)
-
-@Preview
 @Composable
 fun AppRoot() {
-
-    val items = listOf(
-        NavigationItem(
-            title = "Home", icon = Icons.Default.Home, route = "home"
-        ), NavigationItem(
-            title = "Dividas", icon = Icons.Default.Payments, route = "dividas"
-        ), NavigationItem(
-            title = "Histórico", icon = Icons.Default.History, route = "historico"
-        ), NavigationItem(
-            title = "Config.", icon = Icons.Default.Settings, route = "config"
-        )
-    )
-
     val navController = rememberNavController()
-
-    val navGraph = navController.createGraph(startDestination = "home") {
-        composable("home") { HomePage() }
-        composable("dividas") { DividasPage() }
-        composable("historico") { HistoricoPage() }
-        composable("config") { ConfigPage() }
-    }
+    val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
+        topBar = {
+            CustomTopAppBar(
+                title = when (currentRoute) {
+                    Routes.HOME -> "Home"
+                    Routes.DIVIDAS -> "Dívidas"
+                    Routes.HISTORICO -> "Histórico"
+                    Routes.CONFIG -> "Configurações"
+                    else -> "App"
+                },
+                currentRoute = currentRoute,
+                navController = navController,
+                onPersonClick = {
 
-
-        bottomBar = {
-            NavigationBar {
-
-                val selectedNavigationIndex = rememberSaveable {
-                    mutableIntStateOf(0)
                 }
-
-                items.forEachIndexed { index, navigationItem ->
-
-                    NavigationBarItem(
-                        label = { Text(navigationItem.title) },
-                        icon = {
-                            Icon(
-                                navigationItem.icon, contentDescription = navigationItem.title
-                            )
-                        },
-                        selected = selectedNavigationIndex.intValue == index,
-                        onClick = {
-                            selectedNavigationIndex.intValue = index
-                            navController.navigate(navigationItem.route)
-                        },
-                    )
-                }
-            }
-        }
-
+            )
+        },
+        bottomBar = { AppBottomBar(navController) }
     ) { innerPadding ->
-
-
-        NavHost(navController, navGraph, modifier = Modifier.padding(innerPadding))
+        AppNavHost(
+            navController = navController,
+            modifier = Modifier.padding(innerPadding))
     }
 }
-
-@Composable
-fun HomePage() {
-    Box(
-        modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = "Home Screen", style = MaterialTheme.typography.headlineLarge
-        )
-    }
-}
-
-@Composable
-fun DividasPage() {
-    Box(
-        modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = "Dividas Screen", style = MaterialTheme.typography.headlineLarge
-        )
-    }
-}
-
-
-@Composable
-fun HistoricoPage() {
-    Box(
-        modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = "Histórico Screen", style = MaterialTheme.typography.headlineLarge
-        )
-    }
-}
-
-
-@Composable
-fun ConfigPage() {
-    Box(
-        modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = "Config Screen", style = MaterialTheme.typography.headlineLarge
-        )
-    }
-}
-
