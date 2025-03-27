@@ -1,5 +1,6 @@
 package com.example.kredithai.navigation
 
+import CadastroScreen
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
@@ -18,5 +19,6 @@ fun AppNavHost(navController: NavHostController, modifier: Modifier = Modifier) 
         composable(Routes.DIVIDAS) { DividasScreen() }
         composable(Routes.HISTORICO) { HistoricoScreen() }
         composable(Routes.CONFIG) { ConfigScreen() }
+        composable(Routes.CADASTRO) { CadastroScreen() }
     }
 }

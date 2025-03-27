@@ -5,4 +5,5 @@ object Routes {
     const val DIVIDAS = "dividas"
     const val HISTORICO = "historico"
     const val CONFIG = "config"
+    const val CADASTRO = "cadastro"
 }

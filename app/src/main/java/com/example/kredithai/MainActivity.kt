@@ -7,11 +7,15 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.rememberNavController
 import com.example.kredithai.navigation.AppNavHost
 import com.example.kredithai.navigation.Routes
@@ -65,7 +69,20 @@ fun AppRoot() {
                 }
             )
         },
-        bottomBar = { AppBottomBar(navController) }
+        bottomBar = { AppBottomBar(navController) },
+        floatingActionButton = {
+            if (currentRoute == Routes.HOME || currentRoute == Routes.DIVIDAS) {
+                FloatingActionButton(
+                    onClick = {
+                        navController.navigate(Routes.CADASTRO)
+                    },
+                    modifier = Modifier.padding(16.dp)
+                ) {
+                    Icon(Icons.Filled.Add, "Adicionar")
+                }
+            }
+        }
+
     ) { innerPadding ->
         AppNavHost(
             navController = navController,
