@@ -2,4 +2,15 @@
 <resources>
 
     <style name="Theme.Kredithai" parent="android:Theme.Material.Light.NoActionBar" />
+
+    <style name="Theme.MySplashScreen" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/grey</item>
+        <item name="postSplashScreenTheme">@style/Theme.Kredithai</item>
+        <item name="windowSplashScreenAnimatedIcon">
+            @drawable/animated_logo
+        </item>
+        <item name="android:windowLightStatusBar">true</item>
+    </style>
+
 </resources>
+
