@@ -14,20 +14,32 @@ import androidx.compose.material3.Icon
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.rememberNavController
 import com.example.kredithai.navigation.AppNavHost
 import com.example.kredithai.navigation.Routes
 import com.example.kredithai.presentations.components.AppBottomBar
+import com.example.kredithai.presentations.components.DividaFormDialog
 import com.example.kredithai.ui.theme.KredithaiTheme
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import androidx.compose.runtime.*
+import androidx.room.Room
+import com.example.kredithai.data.db.DividaDB
+import com.example.kredithai.data.models.DividaModel
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
+
+        val db = Room.databaseBuilder(
+            applicationContext,
+            DividaDB::class.java, "database-dividas"
+        ).build()
+
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 //        val splashScreen = installSplashScreen()
@@ -40,16 +52,25 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             KredithaiTheme {
-                AppRoot()
+                AppRoot(db)
             }
         }
     }
 }
 
 @Composable
-fun AppRoot() {
+fun AppRoot(db:DividaDB) {
     val navController = rememberNavController()
     val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
+    var isDialogOpen by remember { mutableStateOf(false) }
+
+    val dividaDAO = db.dividaDao()
+
+    suspend fun inserirDivida(divida:DividaModel) {
+        dividaDAO.insert(divida)
+    }
+
+    val coroutineScope = rememberCoroutineScope()
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -74,7 +95,8 @@ fun AppRoot() {
             if (currentRoute == Routes.HOME || currentRoute == Routes.DIVIDAS) {
                 FloatingActionButton(
                     onClick = {
-                        navController.navigate(Routes.CADASTRO)
+                       // navController.navigate(Routes.CADASTRO)
+                        isDialogOpen = true
                     },
                     modifier = Modifier.padding(16.dp)
                 ) {
@@ -84,8 +106,25 @@ fun AppRoot() {
         }
 
     ) { innerPadding ->
+
+        if (isDialogOpen) {
+            DividaFormDialog(
+                isOpen = isDialogOpen,
+                onClose = { isDialogOpen = false }, // Fecha o modal
+                onSave = { divida ->
+                    // Aqui você poderia salvar a dívida no banco de dados usando o DAO
+                    coroutineScope.launch {
+                        inserirDivida(divida) // Call the suspend function
+                        isDialogOpen = false
+                    }
+                },
+                db
+            )
+        }
+
         AppNavHost(
             navController = navController,
-            modifier = Modifier.padding(innerPadding))
+            modifier = Modifier.padding(innerPadding),db)
+
     }
 }

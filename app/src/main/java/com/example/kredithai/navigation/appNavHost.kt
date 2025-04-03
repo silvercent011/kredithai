@@ -6,17 +6,18 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import com.example.kredithai.data.db.DividaDB
 import com.example.kredithai.presentations.screens.*
 
 @Composable
-fun AppNavHost(navController: NavHostController, modifier: Modifier = Modifier) {
+fun AppNavHost(navController: NavHostController, modifier: Modifier = Modifier, db:DividaDB) {
     NavHost(
         navController = navController,
         startDestination = Routes.HOME,
         modifier = modifier
     ) {
         composable(Routes.HOME) { HomeScreen() }
-        composable(Routes.DIVIDAS) { DividasScreen() }
+        composable(Routes.DIVIDAS) { DividasScreen(db) }
         composable(Routes.HISTORICO) { HistoricoScreen() }
         composable(Routes.CONFIG) { ConfigScreen() }
         composable(Routes.CADASTRO) { CadastroScreen() }
