@@ -24,8 +24,6 @@ import com.example.kredithai.navigation.Routes
 import com.example.kredithai.presentations.components.AppBottomBar
 import com.example.kredithai.presentations.components.DividaFormDialog
 import com.example.kredithai.ui.theme.KredithaiTheme
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.*
 import androidx.room.Room

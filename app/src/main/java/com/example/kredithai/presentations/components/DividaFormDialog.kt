@@ -1,18 +1,11 @@
 package com.example.kredithai.presentations.components
-import android.os.Bundle
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.TextFieldValue
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.room.Room
 import com.example.kredithai.data.db.DividaDB
 import com.example.kredithai.data.models.DividaModel
 
@@ -23,8 +16,6 @@ fun DividaFormDialog(
     onSave: (DividaModel) -> Unit,
     db:DividaDB
 ) {
-
-
 
     if (isOpen) {
         AlertDialog(
