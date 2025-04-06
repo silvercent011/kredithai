@@ -75,4 +75,7 @@ dependencies {
     ksp("androidx.room:room-compiler:$room_version")
     // optional - Kotlin Extensions and Coroutines support for Room
     implementation("androidx.room:room-ktx:$room_version")
+
+    implementation("androidx.compose.material3:material3:1.1.1") // Ou versão mais recente
+    implementation("androidx.compose.material3:material3-window-size-class:1.1.1")
 }
