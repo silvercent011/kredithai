@@ -10,16 +10,21 @@ import com.example.kredithai.data.db.DividaDB
 import com.example.kredithai.presentations.screens.*
 
 @Composable
-fun AppNavHost(navController: NavHostController, modifier: Modifier = Modifier, db:DividaDB) {
+fun AppNavHost(navController: NavHostController, modifier: Modifier = Modifier, db: DividaDB) {
     NavHost(
         navController = navController,
         startDestination = Routes.HOME,
         modifier = modifier
     ) {
-        composable(Routes.HOME) { HomeScreen() }
-        composable(Routes.DIVIDAS) { DividasScreen(db) }
-        composable(Routes.HISTORICO) { HistoricoScreen() }
-        composable(Routes.CONFIG) { ConfigScreen() }
-        composable(Routes.CADASTRO) { CadastroScreen() }
+        composable(Routes.HOME) { HomeScreen(navController) }
+        composable(Routes.DIVIDAS) {
+            DividasScreen(
+                navController = navController,
+                db = db
+            )
+        }
+        composable(Routes.HISTORICO) { HistoricoScreen(navController, db) }
+        composable(Routes.CONFIG) { ConfigScreen(navController) }
+        composable(Routes.CADASTRO) { CadastroScreen(navController) }
     }
 }
