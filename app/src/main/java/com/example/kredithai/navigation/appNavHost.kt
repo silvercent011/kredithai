@@ -16,7 +16,7 @@ fun AppNavHost(navController: NavHostController, modifier: Modifier = Modifier, 
         startDestination = Routes.HOME,
         modifier = modifier
     ) {
-        composable(Routes.HOME) { HomeScreen(navController) }
+        composable(Routes.HOME) { HomeScreen(navController, db.dividaDao()) }
         composable(Routes.DIVIDAS) {
             DividasScreen(
                 navController = navController,
