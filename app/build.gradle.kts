@@ -78,4 +78,7 @@ dependencies {
 
     implementation("androidx.compose.material3:material3:1.1.1") // Ou versão mais recente
     implementation("androidx.compose.material3:material3-window-size-class:1.1.1")
+
+    implementation("androidx.compose.ui:ui-text-google-fonts:1.7.8")
+
 }
