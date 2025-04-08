@@ -50,10 +50,7 @@ fun DividaDetailModal(
                 // Seção de informações básicas
                 InfoRow(label = "Nome:", value = divida.nomeCompleto ?: "Não informado")
                 InfoRow(label = "CPF/CNPJ:", value = divida.cpfCnpj ?: "Não informado")
-                InfoRow(label = "Telefone:", value = divida.telefone ?: "Não informado")
-                InfoRow(label = "Endereço:", value = divida.endereco ?: "Não informado")
 
-                Spacer(modifier = Modifier.height(8.dp))
 
                 // Seção financeira
                 InfoRow(label = "Valor:", value = "R$ %.2f".format(divida.valorDivida))
