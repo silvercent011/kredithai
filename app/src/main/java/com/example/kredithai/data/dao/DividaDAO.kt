@@ -36,4 +36,11 @@ interface DividaDao {
 
     @Query("SELECT * FROM dividas WHERE sazonalidade = :sazonalidade")
     suspend fun getDividasBySazonalidade(sazonalidade: String): List<DividaModel>
+
+    @Query("UPDATE dividas SET status = 'atrasada' WHERE status != 'paga' AND data_vencimento < :currentTime")
+    suspend fun atualizarStatusAtrasadas(currentTime: Long)
+
+    @Query("SELECT * FROM dividas WHERE status = 'pendente' OR status = 'atrasada'")
+    suspend fun getDividasPendentesOuAtrasadas(): List<DividaModel>
+
 }
