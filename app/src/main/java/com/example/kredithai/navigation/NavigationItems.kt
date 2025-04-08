@@ -14,7 +14,7 @@ data class NavigationItem(
             NavigationItem("Home", Icons.Default.Home, Routes.HOME),
             NavigationItem("Dívidas", Icons.Default.Payments, Routes.DIVIDAS),
             NavigationItem("Histórico", Icons.Default.History, Routes.HISTORICO),
-            NavigationItem("Config.", Icons.Default.Settings, Routes.CONFIG)
+            NavigationItem("Simulação.", Icons.Default.AttachMoney, Routes.SIMULACAO)
         )
     }
 }
