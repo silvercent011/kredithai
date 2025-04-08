@@ -4,6 +4,6 @@ object Routes {
     const val HOME = "home"
     const val DIVIDAS = "dividas"
     const val HISTORICO = "historico"
-    const val CONFIG = "config"
-    const val CADASTRO = "cadastro"
+    const val SIMULACAO = "simulacao"
+    const val DIVIDAS_DETAILS = "dividas_details"
 }
