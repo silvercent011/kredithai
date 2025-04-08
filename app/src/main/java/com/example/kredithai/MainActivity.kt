@@ -78,8 +78,8 @@ fun AppRoot(db:DividaDB) {
                     Routes.HOME -> "Home"
                     Routes.DIVIDAS -> "Dívidas"
                     Routes.HISTORICO -> "Histórico"
-                    Routes.CONFIG -> "Configurações"
-                    else -> "App"
+                    Routes.SIMULACAO -> "Simulação"
+                    else -> "Adicionar pagamento"
                 },
                 currentRoute = currentRoute,
                 navController = navController,
