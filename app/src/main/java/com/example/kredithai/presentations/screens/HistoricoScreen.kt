@@ -37,7 +37,7 @@ fun HistoricoScreen(
     val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
 
     LaunchedEffect(Unit) {
-        dividas = db.dividaDao().getAllDividas()
+        dividas = db.dividaDao().getDividasPagas()
         isLoading = false
     }
 
