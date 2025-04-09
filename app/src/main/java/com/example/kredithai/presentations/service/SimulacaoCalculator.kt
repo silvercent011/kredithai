@@ -1,40 +1,44 @@
 import com.example.kredithai.data.models.SimulacaoInput
 import java.util.concurrent.TimeUnit
+import kotlin.math.pow
 
 object SimulacaoCalculator {
     fun calcular(
         input: SimulacaoInput,
-        valorPagamento: Double,
         dataPagamento: Long
     ): SimulacaoResult {
+
         val diasAtraso = if (dataPagamento > input.dataVencimento) {
             TimeUnit.MILLISECONDS.toDays(dataPagamento - input.dataVencimento).toInt()
         } else {
             0
         }
 
-        // Calcular multa (pode ser valor fixo ou porcentagem)
-        val valorMulta = if (input.multaAtraso > 1) {
-            input.multaAtraso // assume valor fixo se > 1
-        } else {
-            valorPagamento * input.multaAtraso // assume porcentagem se <= 1
-        }
+        // Determina se a multa é fixa ou percentual (assumindo que < 1 = percentual)
+        val isMultaPercentual = input.multaAtraso < 1.0
 
-        // Calcular juros (ao dia)
-        val jurosDiario = input.taxaJuros.toDouble() / 30 / 100 // converte juros mensal para diário
-        val valorJuros = if (diasAtraso > 0) {
-            valorPagamento * jurosDiario * diasAtraso
+        val valorMulta = if (diasAtraso > 0) {
+            if (isMultaPercentual) {
+                input.valorOriginal * input.multaAtraso
+            } else {
+                input.multaAtraso // valor fixo
+            }
         } else {
             0.0
         }
 
-        val valorTotal = valorPagamento + valorJuros + if (diasAtraso > 0) valorMulta else 0.0
+        val valorJuros = if (diasAtraso > 0) {
+            input.valorOriginal * (Math.pow(1 + input.taxaJuros / 100.0, diasAtraso / 30.0) - 1)
+        } else {
+            0.0
+        }
+
+        val valorTotal = input.valorOriginal + valorJuros + valorMulta
 
         return SimulacaoResult(
             valorOriginal = input.valorOriginal,
-            valorPagamento = valorPagamento,
             valorJuros = valorJuros,
-            valorMulta = if (diasAtraso > 0) valorMulta else 0.0,
+            valorMulta = valorMulta,
             valorTotal = valorTotal,
             diasAtraso = diasAtraso,
             dataVencimento = input.dataVencimento,
@@ -43,9 +47,15 @@ object SimulacaoCalculator {
     }
 }
 
+data class SimulacaoInput(
+    val valorOriginal: Double,
+    val dataVencimento: Long,
+    val taxaJuros: Int, // em porcentagem (ex: 5 para 5%)
+    val multaAtraso: Double // pode ser valor fixo ou % (ex: 0.1 para 10% ou 50.0 para R$50)
+)
+
 data class SimulacaoResult(
     val valorOriginal: Double,
-    val valorPagamento: Double,
     val valorJuros: Double,
     val valorMulta: Double,
     val valorTotal: Double,
