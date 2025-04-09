@@ -1,6 +1,5 @@
 import com.example.kredithai.data.models.SimulacaoInput
 import java.util.concurrent.TimeUnit
-import kotlin.math.pow
 
 object SimulacaoCalculator {
     fun calcular(
@@ -14,7 +13,6 @@ object SimulacaoCalculator {
             0
         }
 
-        // Determina se a multa é fixa ou percentual (assumindo que < 1 = percentual)
         val isMultaPercentual = input.multaAtraso < 1.0
 
         val valorMulta = if (diasAtraso > 0) {
@@ -46,13 +44,6 @@ object SimulacaoCalculator {
         )
     }
 }
-
-data class SimulacaoInput(
-    val valorOriginal: Double,
-    val dataVencimento: Long,
-    val taxaJuros: Int, // em porcentagem (ex: 5 para 5%)
-    val multaAtraso: Double // pode ser valor fixo ou % (ex: 0.1 para 10% ou 50.0 para R$50)
-)
 
 data class SimulacaoResult(
     val valorOriginal: Double,
