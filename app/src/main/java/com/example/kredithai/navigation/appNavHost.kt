@@ -59,6 +59,14 @@ fun AppNavHost(
             SimulacaoValoresScreen(navController) // Tela de simulação independente
         }
 
+        composable(Routes.SETTINGS) {
+            var themeMode by remember { mutableStateOf("system") }
+            SettingsScreen(
+                navController = navController,
+                dividaDao = db.dividaDao(),
+            )
+        }
+
         composable(
             route = "${Routes.DIVIDAS_DETAILS}/{dividaId}",
             arguments = listOf(navArgument("dividaId") { type = NavType.IntType })

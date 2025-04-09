@@ -1,3 +1,5 @@
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Person
@@ -11,8 +13,11 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.navigation.NavController
+import com.example.kredithai.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -44,9 +49,12 @@ fun CustomTopAppBar(
         },
         actions = {
             IconButton(onClick = onPersonClick) {
-                Icon(
-                    imageVector = Icons.Default.Person,
-                    contentDescription = "Perfil"
+                Image(
+                    painter = painterResource(id= R.drawable.user),
+                    contentDescription = "Person",
+                    contentScale = ContentScale.FillWidth,
+                    modifier = Modifier.fillMaxWidth()
+
                 )
             }
         },

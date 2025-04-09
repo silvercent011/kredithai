@@ -6,4 +6,5 @@ object Routes {
     const val HISTORICO = "historico"
     const val SIMULACAO = "simulacao"
     const val DIVIDAS_DETAILS = "dividas_details"
+    const val SETTINGS = "settings"
 }

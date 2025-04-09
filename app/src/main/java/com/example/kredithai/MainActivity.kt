@@ -1,6 +1,8 @@
 package com.example.kredithai
 
 import CustomTopAppBar
+import android.app.Activity
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -61,7 +63,6 @@ fun AppRoot(db:DividaDB) {
     val navController = rememberNavController()
     val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
     var isDialogOpen by remember { mutableStateOf(false) }
-
     val dividaDAO = db.dividaDao()
 
     suspend fun inserirDivida(divida:DividaModel) {
@@ -69,13 +70,23 @@ fun AppRoot(db:DividaDB) {
     }
 
     val coroutineScope = rememberCoroutineScope()
+    val fullScreenRoutes = listOf(Routes.SETTINGS)
+
+    if (currentRoute in fullScreenRoutes) {
+        AppNavHost(
+            navController = navController,
+            modifier = Modifier.fillMaxSize(),
+            db = db
+        )
+    } else {
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         topBar = {
+
             CustomTopAppBar(
                 title = when (currentRoute) {
-                    Routes.HOME -> "Home"
+                    Routes.HOME -> "Kredithai"
                     Routes.DIVIDAS -> "Dívidas"
                     Routes.HISTORICO -> "Histórico"
                     Routes.SIMULACAO -> "Simulação"
@@ -84,7 +95,7 @@ fun AppRoot(db:DividaDB) {
                 currentRoute = currentRoute,
                 navController = navController,
                 onPersonClick = {
-
+                    navController.navigate("settings")
                 }
             )
         },
@@ -124,5 +135,7 @@ fun AppRoot(db:DividaDB) {
             navController = navController,
             modifier = Modifier.padding(innerPadding),db)
 
-    }
+
+
+    }}
 }
