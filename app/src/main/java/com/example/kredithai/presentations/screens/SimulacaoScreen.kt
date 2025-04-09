@@ -42,17 +42,17 @@ fun SimulacaoValoresScreen(
     var valorOriginal by remember { mutableStateOf("") }
     var dataVencimento by remember { mutableStateOf(System.currentTimeMillis()) }
     var taxaJuros by remember { mutableStateOf("5") } // 5% como padrão
-    var multaAtraso by remember { mutableStateOf("2.0") } // 2% como padrão
-
-    var valorPagamento by remember { mutableStateOf("") }
+    var multaAtraso by remember { mutableStateOf("2") } // 2% como padrão
     var dataPagamento by remember { mutableStateOf(System.currentTimeMillis()) }
 
     var showResultDialog by remember { mutableStateOf(false) }
     var simulacaoResult by remember { mutableStateOf<SimulacaoResult?>(null) }
 
-    Scaffold(
+    var valorError by remember { mutableStateOf<String?>(null) }
+    var jurosError by remember { mutableStateOf<String?>(null) }
+    var multaError by remember { mutableStateOf<String?>(null) }
 
-    ) { paddingValues ->
+    Scaffold { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -61,33 +61,27 @@ fun SimulacaoValoresScreen(
                 .verticalScroll(rememberScrollState())
         ) {
             Text(
-                text = "Informe os dados para simulação",
-                style = MaterialTheme.typography.titleMedium,
+                text = "Simulação de Pagamento",
+                style = MaterialTheme.typography.titleLarge,
                 modifier = Modifier.padding(bottom = 16.dp)
-            )
-
-            // Seção: Dados do Débito
-            Text(
-                text = "Dados do Débito",
-                style = MaterialTheme.typography.titleSmall,
-                modifier = Modifier.padding(vertical = 8.dp)
             )
 
             OutlinedTextField(
                 value = valorOriginal,
-                onValueChange = { newValue ->
-                    if (newValue.isEmpty() || newValue.toDoubleOrNull() != null) {
-                        valorOriginal = newValue
-                    }
+                onValueChange = {
+                    valorOriginal = it.filter { c -> c.isDigit() || c == '.' || c == ',' }
+                    valorError = if (valorOriginal.isEmpty()) "Informe o valor" else null
                 },
                 label = { Text("Valor Original (R\$)") },
                 modifier = Modifier.fillMaxWidth(),
+                isError = valorError != null,
+                supportingText = { valorError?.let { Text(it, color = MaterialTheme.colorScheme.error) } },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
             )
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Seletor de data de vencimento
+            // Campo: Data de Vencimento
             var showVencimentoPicker by remember { mutableStateOf(false) }
             val dateFormatter = remember { SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()) }
 
@@ -95,7 +89,7 @@ fun SimulacaoValoresScreen(
                 onClick = { showVencimentoPicker = true },
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Data de Vencimento: ${dateFormatter.format(Date(dataVencimento))}")
+                Text("Vencimento: ${dateFormatter.format(Date(dataVencimento))}")
             }
 
             if (showVencimentoPicker) {
@@ -121,15 +115,17 @@ fun SimulacaoValoresScreen(
 
             Spacer(modifier = Modifier.height(8.dp))
 
+            // Campo: Taxa de Juros
             OutlinedTextField(
                 value = taxaJuros,
-                onValueChange = { newValue ->
-                    if (newValue.isEmpty() || newValue.toIntOrNull() != null) {
-                        taxaJuros = newValue
-                    }
+                onValueChange = {
+                    taxaJuros = it.filter { c -> c.isDigit() }
+                    jurosError = if (taxaJuros.isEmpty()) "Informe a taxa" else null
                 },
                 label = { Text("Taxa de Juros Mensal (%)") },
                 modifier = Modifier.fillMaxWidth(),
+                isError = jurosError != null,
+                supportingText = { jurosError?.let { Text(it, color = MaterialTheme.colorScheme.error) } },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
             )
 
@@ -137,45 +133,28 @@ fun SimulacaoValoresScreen(
 
             OutlinedTextField(
                 value = multaAtraso,
-                onValueChange = { newValue ->
-                    if (newValue.isEmpty() || newValue.toDoubleOrNull() != null) {
-                        multaAtraso = newValue
-                    }
+                onValueChange = {
+                    multaAtraso = it.filter { c -> c.isDigit() || c == '.' || c == ',' }
+                    multaError = if (multaAtraso.isEmpty()) "Informe a multa" else null
                 },
-                label = { Text("Multa por Atraso (R\$ ou %)") },
+                label = { Text("Multa por Atraso (%)") },
                 modifier = Modifier.fillMaxWidth(),
+                isError = multaError != null,
+                supportingText = { multaError?.let { Text(it, color = MaterialTheme.colorScheme.error) } },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
             )
 
-            // Seção: Dados do Pagamento
-            Text(
-                text = "Dados do Pagamento",
-                style = MaterialTheme.typography.titleSmall,
-                modifier = Modifier.padding(vertical = 8.dp)
-            )
+            Spacer(modifier = Modifier.height(16.dp))
 
-            OutlinedTextField(
-                value = valorPagamento,
-                onValueChange = { newValue ->
-                    if (newValue.isEmpty() || newValue.toDoubleOrNull() != null) {
-                        valorPagamento = newValue
-                    }
-                },
-                label = { Text("Valor a Pagar (R\$)") },
-                modifier = Modifier.fillMaxWidth(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // Seletor de data de pagamento
+            // Campo: Data de Pagamento
             var showPagamentoPicker by remember { mutableStateOf(false) }
 
+            Text("Data Prevista de Pagamento:", style = MaterialTheme.typography.labelMedium)
             OutlinedButton(
                 onClick = { showPagamentoPicker = true },
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Data de Pagamento: ${dateFormatter.format(Date(dataPagamento))}")
+                Text(dateFormatter.format(Date(dataPagamento)))
             }
 
             if (showPagamentoPicker) {
@@ -203,23 +182,27 @@ fun SimulacaoValoresScreen(
 
             Button(
                 onClick = {
-                    val input = SimulacaoInput(
-                        valorOriginal = valorOriginal.toDoubleOrNull() ?: 0.0,
-                        dataVencimento = dataVencimento,
-                        taxaJuros = taxaJuros.toIntOrNull() ?: 0,
-                        multaAtraso = multaAtraso.toDoubleOrNull() ?: 0.0
-                    )
+                    valorError = if (valorOriginal.isEmpty()) "Informe o valor" else null
+                    jurosError = if (taxaJuros.isEmpty()) "Informe a taxa" else null
+                    multaError = if (multaAtraso.isEmpty()) "Informe a multa" else null
 
-                    simulacaoResult = SimulacaoCalculator.calcular(
-                        input = input,
-                        valorPagamento = valorPagamento.toDoubleOrNull() ?: 0.0,
-                        dataPagamento = dataPagamento
-                    )
+                    if (valorError == null && jurosError == null && multaError == null) {
+                        val input = SimulacaoInput(
+                            valorOriginal = valorOriginal.replace(",", ".").toDouble(),
+                            dataVencimento = dataVencimento,
+                            taxaJuros = taxaJuros.toInt(),
+                            multaAtraso = multaAtraso.replace(",", ".").toDouble() / 100 // Converte para decimal
+                        )
 
-                    showResultDialog = true
+                        simulacaoResult = SimulacaoCalculator.calcular(
+                            input = input,
+                            dataPagamento = dataPagamento
+                        )
+                        showResultDialog = true
+                    }
                 },
                 modifier = Modifier.fillMaxWidth(),
-                enabled = valorOriginal.isNotEmpty() && valorPagamento.isNotEmpty()
+                enabled = valorOriginal.isNotEmpty() && taxaJuros.isNotEmpty() && multaAtraso.isNotEmpty()
             ) {
                 Text("Calcular Simulação")
             }
@@ -233,7 +216,6 @@ fun SimulacaoValoresScreen(
                 text = {
                     Column {
                         Text("Valor Original: R$ ${"%.2f".format(simulacaoResult!!.valorOriginal)}")
-                        Text("Valor Informado: R$ ${"%.2f".format(simulacaoResult!!.valorPagamento)}")
 
                         if (simulacaoResult!!.diasAtraso > 0) {
                             Text("Dias em Atraso: ${simulacaoResult!!.diasAtraso}")
@@ -252,9 +234,7 @@ fun SimulacaoValoresScreen(
                     }
                 },
                 confirmButton = {
-                    TextButton(
-                        onClick = { showResultDialog = false }
-                    ) {
+                    Button(onClick = { showResultDialog = false }) {
                         Text("Fechar")
                     }
                 }
