@@ -1,8 +1,5 @@
 package com.example.kredithai.presentations.screens
 
-import android.content.Context
-import android.net.Uri
-import android.os.Environment
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -67,13 +64,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.navigation.NavHostController
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
+import androidx.work.workDataOf
 import com.example.kredithai.data.dao.DividaDao
-import kotlinx.coroutines.Dispatchers
+import com.example.kredithai.presentations.service.ExportWorker
+import com.example.kredithai.presentations.service.ImportWorker
+import com.example.kredithai.presentations.service.clearAllData
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import java.io.File
-import java.io.FileWriter
-import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -103,37 +101,63 @@ fun SettingsScreen(
             processingMessage = "Importando dados..."
             scope.launch {
                 try {
-                    importCSV(context, uri, dividaDao)
-                    isProcessing = false
-                    Toast.makeText(context, "Importação concluída com sucesso!", Toast.LENGTH_LONG).show()
+                    isProcessing = true
+                    processingMessage = "Agendando importação..."
+                    val inputData = workDataOf("import_uri" to uri.toString())
+                    val importWorkRequest =
+                        OneTimeWorkRequestBuilder<ImportWorker>().setInputData(inputData)
+                            .addTag("import_work").build()
+                    WorkManager.getInstance(context).enqueue(importWorkRequest)
+                    WorkManager.getInstance(context).getWorkInfosByTagLiveData("import_work")
+                        .observeForever { workInfos ->
+                            if (workInfos?.isNotEmpty() == true) {
+                                val workInfo = workInfos[0]
+                                if (workInfo.state === androidx.work.WorkInfo.State.SUCCEEDED) {
+                                    isProcessing = false
+                                    Toast.makeText(
+                                        context, "Importação concluída", Toast.LENGTH_LONG
+                                    ).show()
+
+                                }
+                            }
+                        }
                 } catch (e: Exception) {
                     isProcessing = false
-                    Toast.makeText(context, "Erro na importação: ${e.message}", Toast.LENGTH_LONG).show()
+                    Toast.makeText(context, "Erro na importação: ${e.message}", Toast.LENGTH_LONG)
+                        .show()
                 }
             }
         }
     }
 
-
-
     val saveLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument("text/csv")
     ) { uri ->
         uri?.let {
-            isProcessing = true
-            processingMessage = "Salvando arquivo..."
             scope.launch {
                 try {
-                    val file = exportToCSV(context, dividaDao)
-                    context.contentResolver.openOutputStream(uri)?.use { outputStream ->
-                        file.inputStream().copyTo(outputStream)
-                    }
-                    file.delete()
-                    isProcessing = false
-                    Toast.makeText(context, "Arquivo salvo com sucesso!", Toast.LENGTH_LONG).show()
+                    val inputData = workDataOf("export_uri" to uri.toString())
+                    val exportWorkRequest =
+                        OneTimeWorkRequestBuilder<ExportWorker>().setInputData(inputData)
+                            .addTag("export_work").build()
+                    WorkManager.getInstance(context).enqueue(exportWorkRequest)
+                    WorkManager.getInstance(context).getWorkInfosByTagLiveData("export_work")
+                        .observeForever { workInfos ->
+                            if (workInfos?.isNotEmpty() == true) {
+                                val workInfo = workInfos[0]
+                                if (workInfo.state === androidx.work.WorkInfo.State.SUCCEEDED) {
+                                    Toast.makeText(
+                                        context,
+                                        "Exportação concluída: ${workInfo.outputData.getString("exported_file_path")}",
+                                        Toast.LENGTH_LONG
+                                    ).show()
+                                }
+                            }
+                        }
                 } catch (e: Exception) {
-                    isProcessing = false
-                    Toast.makeText(context, "Erro ao salvar arquivo: ${e.message}", Toast.LENGTH_LONG).show()
+                    Toast.makeText(
+                        context, "Erro ao salvar arquivo: ${e.message}", Toast.LENGTH_LONG
+                    ).show()
                 }
             }
         }
@@ -143,19 +167,16 @@ fun SettingsScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Configurações") },
-                navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Voltar")
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                )
+                title = { Text("Configurações") }, navigationIcon = {
+                IconButton(onClick = { navController.popBackStack() }) {
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Voltar")
+                }
+            }, colors = TopAppBarDefaults.topAppBarColors(
+                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
             )
-        }
-    ) { paddingValues ->
+            )
+        }) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -164,8 +185,7 @@ fun SettingsScreen(
         ) {
 
             SettingsSection(
-                title = "Gerenciamento de Dados",
-                icon = Icons.Default.Storage
+                title = "Gerenciamento de Dados", icon = Icons.Default.Storage
             ) {
                 Column(
                     modifier = Modifier.fillMaxWidth(),
@@ -176,23 +196,15 @@ fun SettingsScreen(
                         subtitle = "Crie um arquivo para compartilhar ou backup",
                         icon = Icons.Default.FileUpload,
                         onClick = {
-                            isProcessing = true
-                            processingMessage = "Exportando dados..."
-                            scope.launch {
-                                try {
-                                    val file = exportToCSV(context, dividaDao)
-                                    isProcessing = false
-                                    saveLauncher.launch(file.name)
-                                } catch (e: Exception) {
-                                    isProcessing = false
-                                    Toast.makeText(
-                                        context,
-                                        "Erro ao exportar: ${e.message}",
-                                        Toast.LENGTH_LONG
-                                    ).show()
-                                }
-                            }
+                            val dateFormat =
+                                SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault())
+                            val timestamp = dateFormat.format(Date())
+                            val fileName = "kredithai_export_$timestamp.csv"
+
+                            saveLauncher.launch(fileName)
+
                         }
+
                     )
 
                     SettingItem(
@@ -200,10 +212,8 @@ fun SettingsScreen(
                         subtitle = "Adicione dados a partir de um arquivo CSV",
                         icon = Icons.Default.FileDownload,
                         onClick = {
-                                importLauncher.launch("*/*")
-                        }
-                    )
-
+                            importLauncher.launch("*/*")
+                        })
 
 
                 }
@@ -212,8 +222,7 @@ fun SettingsScreen(
             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
             SettingsSection(
-                title = "Segurança",
-                icon = Icons.Default.Security
+                title = "Segurança", icon = Icons.Default.Security
             ) {
                 Column(
                     modifier = Modifier.fillMaxWidth(),
@@ -226,7 +235,8 @@ fun SettingsScreen(
                         iconTint = MaterialTheme.colorScheme.error,
                         onClick = {
                             confirmationTitle = "ATENÇÃO!"
-                            confirmationMessage = "Esta ação irá apagar TODOS os dados do aplicativo permanentemente. Esta ação não pode ser desfeita. Deseja continuar?"
+                            confirmationMessage =
+                                "Esta ação irá apagar TODOS os dados do aplicativo permanentemente. Esta ação não pode ser desfeita. Deseja continuar?"
                             confirmationAction = {
                                 isProcessing = true
                                 processingMessage = "Apagando dados..."
@@ -234,16 +244,23 @@ fun SettingsScreen(
                                     try {
                                         clearAllData(dividaDao)
                                         isProcessing = false
-                                        Toast.makeText(context, "Todos os dados foram apagados!", Toast.LENGTH_LONG).show()
+                                        Toast.makeText(
+                                            context,
+                                            "Todos os dados foram apagados!",
+                                            Toast.LENGTH_LONG
+                                        ).show()
                                     } catch (e: Exception) {
                                         isProcessing = false
-                                        Toast.makeText(context, "Erro ao apagar dados: ${e.message}", Toast.LENGTH_LONG).show()
+                                        Toast.makeText(
+                                            context,
+                                            "Erro ao apagar dados: ${e.message}",
+                                            Toast.LENGTH_LONG
+                                        ).show()
                                     }
                                 }
                             }
                             showConfirmationDialog = true
-                        }
-                    )
+                        })
                 }
             }
 
@@ -251,8 +268,7 @@ fun SettingsScreen(
 
 
             SettingsSection(
-                title = "Sobre o Aplicativo",
-                icon = Icons.Outlined.Info
+                title = "Sobre o Aplicativo", icon = Icons.Outlined.Info
             ) {
                 Card(
                     modifier = Modifier
@@ -276,8 +292,7 @@ fun SettingsScreen(
                         )
 
                         Text(
-                            text = "Versão 1.0.0",
-                            style = MaterialTheme.typography.bodyMedium
+                            text = "Versão 1.0.0", style = MaterialTheme.typography.bodyMedium
                         )
 
                         Text(
@@ -313,8 +328,7 @@ fun SettingsScreen(
                     onClick = {
                         showConfirmationDialog = false
                         confirmationAction()
-                    },
-                    colors = ButtonDefaults.buttonColors(
+                    }, colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.error
                     )
                 ) {
@@ -323,20 +337,16 @@ fun SettingsScreen(
             },
             dismissButton = {
                 OutlinedButton(
-                    onClick = { showConfirmationDialog = false }
-                ) {
+                    onClick = { showConfirmationDialog = false }) {
                     Text("Cancelar")
                 }
-            }
-        )
+            })
     }
 
     if (isProcessing) {
         Dialog(
-            onDismissRequest = {},
-            properties = DialogProperties(
-                dismissOnBackPress = false,
-                dismissOnClickOutside = false
+            onDismissRequest = {}, properties = DialogProperties(
+                dismissOnBackPress = false, dismissOnClickOutside = false
             )
         ) {
             Surface(
@@ -366,9 +376,7 @@ fun SettingsScreen(
 
 @Composable
 fun SettingsSection(
-    title: String,
-    icon: ImageVector,
-    content: @Composable () -> Unit
+    title: String, icon: ImageVector, content: @Composable () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -409,9 +417,7 @@ fun SettingItem(
     iconTint: Color = MaterialTheme.colorScheme.primary
 ) {
     Surface(
-        onClick = onClick,
-        shape = RoundedCornerShape(8.dp),
-        color = Color.Transparent
+        onClick = onClick, shape = RoundedCornerShape(8.dp), color = Color.Transparent
     ) {
         Row(
             modifier = Modifier
@@ -423,8 +429,7 @@ fun SettingItem(
                 modifier = Modifier
                     .size(40.dp)
                     .clip(CircleShape)
-                    .background(iconTint.copy(alpha = 0.1f)),
-                contentAlignment = Alignment.Center
+                    .background(iconTint.copy(alpha = 0.1f)), contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = icon,
@@ -438,8 +443,7 @@ fun SettingItem(
 
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = title,
-                    style = MaterialTheme.typography.bodyLarge
+                    text = title, style = MaterialTheme.typography.bodyLarge
                 )
 
                 Text(
@@ -460,138 +464,3 @@ fun SettingItem(
 
 
 
-suspend fun exportToCSV(context: Context, dividaDao: DividaDao): File {
-    val dividas = dividaDao.getAllDividas()
-    val dateFormat = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault())
-    val timestamp = dateFormat.format(Date())
-    val fileName = "kredithai_export_$timestamp.csv"
-
-    val exportDir = context.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS)
-    val file = File(exportDir, fileName)
-
-    withContext(Dispatchers.IO) {
-        FileWriter(file).use { writer ->
-            writer.append("ID,Nome Completo,CPF/CNPJ,Telefone,Endereço,Valor da Dívida,Data de Vencimento,Status,Sazonalidade,Data de Pagamento,Descrição,Juros\n")
-
-            dividas.forEach { divida ->
-                val dataVencimento = SimpleDateFormat(
-                    "dd/MM/yyyy",
-                    Locale.getDefault()
-                ).format(Date(divida.dataVencimento))
-                val dataPagamento = if (divida.dataPagamento != null) {
-                    SimpleDateFormat(
-                        "dd/MM/yyyy",
-                        Locale.getDefault()
-                    ).format(Date(divida.dataPagamento))
-                } else {
-                    ""
-                }
-
-                writer.append("${divida.uid},")
-                writer.append("\"${divida.nomeCompleto ?: ""}\",")
-                writer.append("\"${divida.cpfCnpj ?: ""}\",")
-                writer.append("\"${divida.telefone ?: ""}\",")
-                writer.append("\"${divida.endereco ?: ""}\",")
-                writer.append("${divida.valorDivida},")
-                writer.append("\"$dataVencimento\",")
-                writer.append("\"${divida.status}\",")
-                writer.append("\"${divida.sazonalidade}\",")
-                writer.append("\"$dataPagamento\",")
-                writer.append("\"${divida.descricao ?: ""}\",")
-                writer.append("${divida.juros ?: 0}\n")
-            }
-        }
-    }
-
-    return file
-}
-
-
-
-
-suspend fun importCSV(context: Context, uri: Uri, dividaDao: DividaDao) {
-    try {
-        context.contentResolver.openInputStream(uri)?.use { inputStream ->
-            val reader = inputStream.bufferedReader()
-            val lines = reader.readLines()
-
-            val dataLines = if (lines.size > 1) lines.subList(1, lines.size) else emptyList()
-
-            var importCount = 0
-
-            for (line in dataLines) {
-                try {
-                    val fields = line.split(",")
-
-                    if (fields.size < 5) continue
-
-                    val nomeCompleto = fields.getOrNull(1)?.trim('"') ?: ""
-                    val cpfCnpj = fields.getOrNull(2)?.trim('"') ?: ""
-                    val telefone = fields.getOrNull(3)?.trim('"') ?: ""
-                    val endereco = fields.getOrNull(4)?.trim('"') ?: ""
-                    val valorDivida = fields.getOrNull(5)?.toDoubleOrNull() ?: 0.0
-
-                    val dataVencimentoStr = fields.getOrNull(6)?.trim('"') ?: ""
-                    val dataVencimento = if (dataVencimentoStr.isNotEmpty()) {
-                        try {
-                            SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).parse(dataVencimentoStr)?.time
-                        } catch (e: Exception) {
-                            System.currentTimeMillis()
-                        }
-                    } else {
-                        System.currentTimeMillis()
-                    } ?: System.currentTimeMillis()
-
-                    val status = fields.getOrNull(7)?.trim('"') ?: "Pendente"
-                    val sazonalidade = fields.getOrNull(8)?.trim('"') ?: "Mensal"
-
-                    val dataPagamentoStr = fields.getOrNull(9)?.trim('"') ?: ""
-                    val dataPagamento = if (dataPagamentoStr.isNotEmpty()) {
-                        try {
-                            SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).parse(dataPagamentoStr)?.time
-                        } catch (e: Exception) {
-                            null
-                        }
-                    } else {
-                        null
-                    }
-
-                    val descricao = fields.getOrNull(10)?.trim('"') ?: ""
-                    val juros = fields.getOrNull(11)?.toIntOrNull() ?: 0
-
-                    val divida = com.example.kredithai.data.models.DividaModel(
-                        nomeCompleto = nomeCompleto.ifEmpty { null },
-                        cpfCnpj = cpfCnpj.ifEmpty { null },
-                        telefone = telefone.ifEmpty { null },
-                        endereco = endereco.ifEmpty { null },
-                        valorDivida = valorDivida,
-                        dataVencimento = dataVencimento,
-                        status = status,
-                        sazonalidade = sazonalidade,
-                        dataPagamento = dataPagamento,
-                        descricao = descricao.ifEmpty { null },
-                        juros = juros
-                    )
-
-                    dividaDao.insert(divida)
-                    importCount++
-                } catch (e: Exception) {
-                    continue
-                }
-            }
-
-            if (importCount == 0) {
-                throw IOException("Nenhum registro foi importado. Verifique o formato do arquivo.")
-            }
-        } ?: throw IOException("Não foi possível abrir o arquivo")
-    } catch (e: Exception) {
-        throw IOException("Erro ao importar dados: ${e.localizedMessage}")
-    }
-}
-
-suspend fun clearAllData(dividaDao: DividaDao) {
-    val dividas = dividaDao.getAllDividas()
-    dividas.forEach { divida ->
-        dividaDao.delete(divida)
-    }
-}

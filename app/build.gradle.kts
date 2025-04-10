@@ -70,15 +70,15 @@ dependencies {
 
     implementation("androidx.room:room-runtime:$room_version")
 
-    // If this project uses any Kotlin source, use Kotlin Symbol Processing (KSP)
-    // See Add the KSP plugin to your project
     ksp("androidx.room:room-compiler:$room_version")
-    // optional - Kotlin Extensions and Coroutines support for Room
     implementation("androidx.room:room-ktx:$room_version")
 
-    implementation("androidx.compose.material3:material3:1.1.1") // Ou versão mais recente
+    implementation("androidx.compose.material3:material3:1.1.1")
     implementation("androidx.compose.material3:material3-window-size-class:1.1.1")
 
     implementation("androidx.compose.ui:ui-text-google-fonts:1.7.8")
+
+    val work_version = "2.10.0"
+    implementation("androidx.work:work-runtime-ktx:$work_version")
 
 }
