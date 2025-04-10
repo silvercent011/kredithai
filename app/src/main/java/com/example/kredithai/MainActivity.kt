@@ -1,8 +1,6 @@
 package com.example.kredithai
 
 import CustomTopAppBar
-import android.app.Activity
-import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -42,14 +40,6 @@ class MainActivity : ComponentActivity() {
 
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-//        val splashScreen = installSplashScreen()
-//        splashScreen.setKeepOnScreenCondition {true}
-//
-//        CoroutineScope(Dispatchers.Main).launch {
-//        delay(3000L)
-//          splashScreen.setKeepOnScreenCondition {false}
-//        }
-
         setContent {
             KredithaiTheme {
                 AppRoot(db)
@@ -104,7 +94,6 @@ fun AppRoot(db:DividaDB) {
             if (currentRoute == Routes.HOME || currentRoute == Routes.DIVIDAS) {
                 FloatingActionButton(
                     onClick = {
-                       // navController.navigate(Routes.CADASTRO)
                         isDialogOpen = true
                     },
                     modifier = Modifier.padding(16.dp)
@@ -119,11 +108,10 @@ fun AppRoot(db:DividaDB) {
         if (isDialogOpen) {
             DividaFormDialog(
                 isOpen = isDialogOpen,
-                onClose = { isDialogOpen = false }, // Fecha o modal
+                onClose = { isDialogOpen = false },
                 onSave = { divida ->
-                    // Aqui você poderia salvar a dívida no banco de dados usando o DAO
                     coroutineScope.launch {
-                        inserirDivida(divida) // Call the suspend function
+                        inserirDivida(divida)
                         isDialogOpen = false
                     }
                 },

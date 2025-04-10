@@ -9,9 +9,9 @@ data class DividaModel(
     @PrimaryKey(autoGenerate = true) val uid: Int = 0,
 
     @ColumnInfo(name = "nome_completo") val nomeCompleto: String?,
-    @ColumnInfo(name = "cpf_cnpj") val cpfCnpj: String?, // CPF ou CNPJ do devedor
-    @ColumnInfo(name = "telefone") val telefone: String?, // Telefone de contato do devedor
-    @ColumnInfo(name = "endereco") val endereco: String?, // Endereço de contato do devedor
+    @ColumnInfo(name = "cpf_cnpj") val cpfCnpj: String?,
+    @ColumnInfo(name = "telefone") val telefone: String?,
+    @ColumnInfo(name = "endereco") val endereco: String?,
     @ColumnInfo(name = "valor_divida") val valorDivida: Double,
     @ColumnInfo(name = "data_vencimento") val dataVencimento: Long, // Armazenando como timestamp (data em milissegundos)
     @ColumnInfo(name = "status") val status: String, // "pendente", "paga", "atrasada"

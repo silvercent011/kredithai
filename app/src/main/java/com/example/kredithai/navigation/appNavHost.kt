@@ -1,6 +1,5 @@
 package com.example.kredithai.navigation
 
-import CadastroScreen
 import SimulacaoValoresScreen
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -56,7 +55,7 @@ fun AppNavHost(
             )
         }
         composable(Routes.SIMULACAO) {
-            SimulacaoValoresScreen(navController) // Tela de simulação independente
+            SimulacaoValoresScreen(navController)
         }
 
         composable(Routes.SETTINGS) {

@@ -157,7 +157,6 @@ fun HistoricoScreen(
                 }
             }
 
-            // Modal de detalhes
             selectedDivida?.let { divida ->
                 DividaDetailModal(
                     divida = divida,

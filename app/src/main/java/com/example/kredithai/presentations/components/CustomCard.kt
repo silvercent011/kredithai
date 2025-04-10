@@ -9,7 +9,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.kredithai.data.models.DividaModel
 import java.text.SimpleDateFormat
@@ -79,7 +78,6 @@ fun DividaCard(
                 }
             }
 
-            // Ícone de lixeira no canto superior direito
             IconButton(
                 onClick = { showDialog = true },
                 modifier = Modifier
@@ -138,30 +136,6 @@ private fun RowInfo(
             style = MaterialTheme.typography.bodyMedium,
             color = valueColor,
             fontWeight = FontWeight.Bold
-        )
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun DividaCardPreview() {
-    val mockDivida = DividaModel(
-        nomeCompleto = "João da Silva",
-        cpfCnpj = "123.456.789-00",
-        telefone = "(11) 98765-4321",
-        endereco = "Rua Exemplo, 123",
-        valorDivida = 1250.75,
-        dataVencimento = System.currentTimeMillis() + (86400000 * 7),
-        status = "pendente",
-        sazonalidade = "mensal",
-        juros = 5,
-        descricao = "Empréstimo pessoal contratado em Janeiro/2023"
-    )
-
-    MaterialTheme {
-        DividaCard(
-            divida = mockDivida,
-            onDelete = {}
         )
     }
 }

@@ -45,14 +45,12 @@ fun EditDividaContent(
     val dateFormat = remember { SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()) }
     val currentDate = System.currentTimeMillis()
 
-    // Atualiza status baseado nas datas
     fun atualizarStatus(): String = when {
         editedDivida.dataPagamento != null -> "paga"
         currentDate > editedDivida.dataVencimento -> "atrasada"
         else -> "pendente"
     }
 
-    // Recalcula status toda vez que a data for alterada
     LaunchedEffect(editedDivida.dataPagamento) {
         editedDivida = editedDivida.copy(status = atualizarStatus())
     }
@@ -63,7 +61,7 @@ fun EditDividaContent(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // Status automático
+
         OutlinedTextField(
             value = editedDivida.status.replaceFirstChar { it.uppercase() },
             onValueChange = {},
@@ -76,7 +74,6 @@ fun EditDividaContent(
             )
         )
 
-        // Data de pagamento
         OutlinedTextField(
             value = editedDivida.dataPagamento?.let { dateFormat.format(Date(it)) } ?: "Não pago",
             onValueChange = {},
@@ -90,7 +87,6 @@ fun EditDividaContent(
             }
         )
 
-        // Data de vencimento (apenas visual)
         OutlinedTextField(
             value = dateFormat.format(Date(editedDivida.dataVencimento)),
             onValueChange = {},
@@ -114,7 +110,6 @@ fun EditDividaContent(
         }
     }
 
-    // Date Picker
     if (showDatePicker) {
         val datePickerState = rememberDatePickerState(
             initialSelectedDateMillis = editedDivida.dataPagamento ?: currentDate

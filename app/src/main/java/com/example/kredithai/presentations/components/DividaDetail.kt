@@ -47,12 +47,10 @@ fun DividaDetailModal(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Seção de informações básicas
                 InfoRow(label = "Nome:", value = divida.nomeCompleto ?: "Não informado")
                 InfoRow(label = "CPF/CNPJ:", value = divida.cpfCnpj ?: "Não informado")
 
 
-                // Seção financeira
                 InfoRow(label = "Valor:", value = "R$ %.2f".format(divida.valorDivida))
                 InfoRow(label = "Juros:", value = "${divida.juros}%")
                 InfoRow(label = "Vencimento:", value = dateFormat.format(Date(divida.dataVencimento)))
@@ -63,7 +61,6 @@ fun DividaDetailModal(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // Status e sazonalidade
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -91,7 +88,6 @@ fun DividaDetailModal(
                     }
                 }
 
-                // Descrição
                 divida.descricao?.let {
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
