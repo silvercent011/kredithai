@@ -97,12 +97,8 @@ fun SettingsScreen(
         contract = ActivityResultContracts.GetContent()
     ) { uri ->
         uri?.let {
-            isProcessing = true
-            processingMessage = "Importando dados..."
             scope.launch {
                 try {
-                    isProcessing = true
-                    processingMessage = "Agendando importação..."
                     val inputData = workDataOf("import_uri" to uri.toString())
                     val importWorkRequest =
                         OneTimeWorkRequestBuilder<ImportWorker>().setInputData(inputData)
